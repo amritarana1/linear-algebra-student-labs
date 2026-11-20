@@ -48,8 +48,19 @@ def gram_schmidt_qr(A):
     R = np.zeros_like(A)
 
     # TODO: fill in Q and R
-
-    return Q, R
+    for j in range(n):
+      v = A[:, j].copy()
+      
+        for i in range(j):
+            R[i, j] = Q[:, i] @ A[:, j]
+            v = v - R[i, j] * Q[:, i]
+          
+        R[j, j] = np.linalg.norm(v)
+        
+      with np.errstate(divide="ignore", invalid="ignore"):
+            Q[:, j] = v / R[j, j]
+    
+  return Q, R
 
 
 def generate_table():
@@ -69,6 +80,27 @@ def generate_table():
     #     )
     # pd.DataFrame(rows).to_csv("table.csv", index=False)
 
+  import pandas as pd
+
+    rows = []
+    for j in range(6, 17):
+        eps = 10.0 ** (-j)
+        
+        A = A_func(eps)
+        Q, R = gram_schmidt_qr(A)
+        n = A.shape[0]
+        
+        error1 = np.linalg.norm(A - Q @ R)
+        error2 = np.linalg.norm(Q.T @ Q - np.eye(n))
+        error3 = np.linalg.norm(R - np.triu(R))
+        
+        rows.append(
+            {"eps": eps, "error1": error1, "error2": error2, "error3": error3}
+        )
+
+    df = pd.DataFrame(rows)
+    df.to_csv("table.csv", index=False)
+    return df
 
 if __name__ == "__main__":
-    generate_table()
+    print(generate_table().to_string())
